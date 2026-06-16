@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Set 1 · Grile Analiză</title>
+<style>
+  :root{--bg:#f3f4f6; --card:#ffffff; --accent:#0ea5a4; --green:#16a34a; --red:#dc2626;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:24px 12px;}
+  .card{width:min(900px,96vw);background:var(--card);border-radius:16px;box-shadow:0 8px 24px rgba(15,23,42,0.12);padding:24px;}
+  .head{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  h1{ margin:0 0 4px 0;font-size:20px; }
+  .question{font-size:18px;margin:16px 0;min-height:40px;line-height:1.45}
+  .options{display:flex;flex-direction:column;gap:8px}
+  .option{padding:10px 12px;border-radius:10px;border:1px solid #e6e6e6;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;line-height:1.4}
+  .option .optline{display:flex;gap:10px;align-items:flex-start}
+  .optletter{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:#eef2f7;color:#111;font-weight:700;font-size:13px;display:inline-flex;align-items:center;justify-content:center;margin-top:1px}
+  .option.disabled{opacity:0.7;cursor:default}
+  .option.correct{background:rgba(22,163,74,0.12);border-color:rgba(22,163,74,0.4)}
+  .option.correct .optletter{background:var(--green);color:#fff}
+  .option.wrong{background:rgba(220,38,38,0.06);border-color:rgba(220,38,38,0.35)}
+  .option.wrong .optletter{background:var(--red);color:#fff}
+  .controls{display:flex;gap:12px;margin-top:18px;align-items:center;flex-wrap:wrap}
+  button{padding:10px 14px;border-radius:10px;border:none;background:var(--accent);color:white;cursor:pointer;font-weight:600;font-size:14px}
+  button:disabled{opacity:0.5;cursor:default}
+  button.secondary{background:#e6e6e6;color:#111}
+  .feedback{font-weight:700;font-size:14px}
+  .status{margin-left:auto;color:#374151;font-size:14px;font-weight:600}
+  .visual{height:6px;background:#e5e7eb;border-radius:999px;margin-top:12px;overflow:hidden}
+  .small{font-size:13px;color:#6b7280}
+  .incnote{font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:6px 10px;margin:0 0 8px 0;display:inline-block}
+  /* reference data tables */
+  .refwrap{margin:10px 0 14px 0}
+  .refToggle{background:#111;color:#fff;font-size:13px;padding:8px 12px;border-radius:8px}
+  .refContent{margin-top:10px;overflow-x:auto}
+  table.ref{border-collapse:collapse;width:100%;font-size:12.5px;margin-bottom:14px;min-width:340px}
+  table.ref th,table.ref td{border:1px solid #e2e8f0;padding:4px 8px;text-align:left}
+  table.ref th{background:#f1f5f9;font-weight:700}
+  table.ref .ttl{background:#0ea5a4;color:#fff;text-align:center;font-size:13px}
+  table.ref .sec{background:#334155;color:#fff;font-weight:700;text-align:center}
+  table.ref .nr{text-align:center;color:#64748b;width:42px}
+  table.ref .sp{}
+  table.ref .v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  @media(max-width:520px){ .status{margin-left:0} }
+  .back-link{display:inline-block;margin-bottom:14px;text-decoration:none;color:#6b7280;font-weight:600;font-size:14px}
+  .back-link:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="card">
+  <a href="index.html" class="back-link">← Înapoi la meniu</a>
+  <div class="head">
+    <h1>Set 1 — Grile Analiză Economico-Financiară</h1>
+    <div class="small" id="qcount"></div>
+    <div style="margin-left:auto" id="progressText" class="small">Răspunde pentru a începe</div>
+  </div>
+  <div class="visual"><div id="visualBar" style="height:100%;width:0;background:linear-gradient(90deg,var(--green),#10b981);border-radius:999px;transition:width .25s"></div></div>
+  <div id="quizArea">
+    <div id="qnum" class="small" style="margin-top:12px"></div>
+    <div id="refBox"></div>
+    <div id="question" class="question"></div>
+    <div id="options" class="options"></div>
+    <div class="controls">
+      <button id="submitBtn">Verifică</button>
+      <button id="nextBtn" class="secondary" style="display:none">Următoarea →</button>
+      <div id="feedback" class="feedback"></div>
+      <div class="status" id="score">Scor: 0</div>
+    </div>
+  </div>
+</div>
+<script>
+// ============================================================
+const resurse = {"bilant":{"titlu":"Bilanț financiar (anii 1 și 2)","html":"<table class=\"ref\"><tr><th colspan=\"4\" class=\"ttl\">Bilanț financiar - RON</th></tr><tr><th>Nr.crt.</th><th>Specificare\\ an</th><th>1</th><th>2</th></tr><tr><td colspan=\"4\" class=\"sec\">ACTIV</td></tr><tr><td class=\"nr\">1</td><td class=\"sp\">Imobilizări necorporale</td><td class=\"v\">180</td><td class=\"v\">456</td></tr><tr><td class=\"nr\">2</td><td class=\"sp\">Imobilizări corporale</td><td class=\"v\">17.640</td><td class=\"v\">22.344</td></tr><tr><td class=\"nr\">3</td><td class=\"sp\">Imobilizări financiare</td><td class=\"v\">180</td><td class=\"v\">0</td></tr><tr><td class=\"nr\">4</td><td class=\"sp\">ACTIVE IMOBILIZATE-TOTAL</td><td class=\"v\">18.000</td><td class=\"v\">22.800</td></tr><tr><td class=\"nr\">5</td><td class=\"sp\">Stocuri</td><td class=\"v\">2.000</td><td class=\"v\">2.850</td></tr><tr><td class=\"nr\">6</td><td class=\"sp\">Creanțe</td><td class=\"v\">5.000</td><td class=\"v\">5.700</td></tr><tr><td class=\"nr\">7</td><td class=\"sp\">Disponibilitati</td><td class=\"v\">2.778</td><td class=\"v\">1.650</td></tr><tr><td class=\"nr\">8</td><td class=\"sp\">ACTIVE CIRCULANTE-TOTAL</td><td class=\"v\">9.778</td><td class=\"v\">10.200</td></tr><tr><td class=\"nr\">9</td><td class=\"sp\">TOTAL ACTIV</td><td class=\"v\">27.778</td><td class=\"v\">33.000</td></tr><tr><td colspan=\"4\" class=\"sec\">PASIV</td></tr><tr><td class=\"nr\">1</td><td class=\"sp\">Capitaluri proprii</td><td class=\"v\">13.889</td><td class=\"v\">14.850</td></tr><tr><td class=\"nr\">2</td><td class=\"sp\">Datorii pe t. mediu și lung</td><td class=\"v\">2.778</td><td class=\"v\">3.300</td></tr><tr><td class=\"nr\">3</td><td class=\"sp\">…datorii financiare pe tml</td><td class=\"v\">2.500</td><td class=\"v\">3.300</td></tr><tr><td class=\"nr\">4</td><td class=\"sp\">... datorii de exploatare pe tml</td><td class=\"v\">278</td><td class=\"v\">0</td></tr><tr><td class=\"nr\">5</td><td class=\"sp\">CAPITAL PERMANENT</td><td class=\"v\">16.667</td><td class=\"v\">18.150</td></tr><tr><td class=\"nr\">6</td><td class=\"sp\">Datorii pe termen scurt</td><td class=\"v\">11.111</td><td class=\"v\">14.850</td></tr><tr><td class=\"nr\">7</td><td class=\"sp\">...datorii financiare pe termen scurt</td><td class=\"v\">556</td><td class=\"v\">3.713</td></tr><tr><td class=\"nr\">8</td><td class=\"sp\">...datorii de exploatare pe ts, din care:</td><td class=\"v\">10.556</td><td class=\"v\">11.138</td></tr><tr><td class=\"nr\">9</td><td class=\"sp\">..-furnizori și conturi asimilate</td><td class=\"v\">3.000</td><td class=\"v\">1.900</td></tr><tr><td class=\"nr\">10</td><td class=\"sp\">..-alte datorii de exploatare</td><td class=\"v\">7.556</td><td class=\"v\">9.238</td></tr><tr><td class=\"nr\">11</td><td class=\"sp\">DATORII-TOTAL</td><td class=\"v\">13.889</td><td class=\"v\">18.150</td></tr><tr><td class=\"nr\">12</td><td class=\"sp\">TOTAL PASIV</td><td class=\"v\">27.778</td><td class=\"v\">33.000</td></tr></table><table class=\"ref\"><tr><th colspan=\"4\" class=\"ttl\">Extras Cont de profit și pierdere - RON</th></tr><tr><th>Nr.crt.</th><th>Specificare\\ an</th><th>1</th><th>2</th></tr><tr><td class=\"nr\">1</td><td class=\"sp\">Cifra de afaceri</td><td class=\"v\">72.000</td><td class=\"v\">68.400</td></tr><tr><td class=\"nr\">2</td><td class=\"sp\">Rezultatul exploatării</td><td class=\"v\">7.000</td><td class=\"v\">6.000</td></tr><tr><td class=\"nr\">3</td><td class=\"sp\">Rezultat net</td><td class=\"v\">6.480</td><td class=\"v\">5.130</td></tr></table>"},"personal":{"titlu":"Date pentru analiza factorială (programat vs. realizat)","html":"<table class=\"ref\"><tr><th>Nr.crt.</th><th>Specificatie</th><th>Valori programate</th><th>Valori realizate</th><th>u.m.</th></tr><tr><td class=\"nr\">1</td><td class=\"sp\">Numar de personal</td><td class=\"v\">30</td><td class=\"v\">25</td><td>pers.</td></tr><tr><td class=\"nr\">2</td><td class=\"sp\">Mijloace fixe</td><td class=\"v\">10.000</td><td class=\"v\">8.000</td><td>RON</td></tr><tr><td class=\"nr\">3</td><td class=\"sp\">Cifra de afaceri</td><td class=\"v\">24.000</td><td class=\"v\">18.000</td><td>RON</td></tr></table>"}};
+const grile = [{"question":"Rata stabilităţii financiare aferente anului 1 reflectă:","options":["active imobilizate supradimensionate;","o stabilitate superioară minimului considerat a fi acceptabil (50%);","riscuri ridicate în finanţare;","nici un răspuns nu este corect."],"correct":1,"resource":"bilant","source":"BIG","incomplete":false,"id":1},{"question":"Care dintre următoarele afirmații cu privire la Rata surselor curente din anul 1 este adevărată?","options":["Reflectă existența unei stabilități sporite în finanțare dar și un cost mediu ridicat al finanțării","Reflectă un grad ridicat de instabilitate în procesul de finanțare","Are o valoare de 35,2%","Structura optimă a surselor de finanțare după criteriul provenienței"],"correct":0,"resource":"bilant","source":"ANALIZA","incomplete":false,"id":2},{"question":"Rata autonomiei financiare globale aferente anului 2 indică:","options":["Capacitate bună de plată a datoriilor curente;","O pondere a capitalului permanent în total pasiv de 41,88%;","Capacitate scăzută de plată a datoriilor curente;","O pondere a capitalului propriu în total pasiv de 41,88%."],"correct":3,"resource":"bilant","source":"BIG","incomplete":false,"id":3},{"question":"Care dintre următoarele măsuri pot asigura optimizarea structurii financiare pe termene:","options":["Creşterea capitalului social;","Înlocuirea parţială a datoriilor pe termen mediu şi lung cu datorii pe termen scurt;","Creşterea activelor imobilizate;","Nu se impun măsuri de corecţie."],"correct":0,"resource":null,"source":"BIG","incomplete":false,"id":4},{"question":"Rata activelor imobilizate din anul 1 arată:","options":["O pondere a imobilizărilor în total activ de 53,32%;","Flexibilitate ridicată a activului, dacă se consideră optim un nivel al ratei activelor imobilizate de 60%;","O eficienţă ridicată a gestiunii activelor imobilizate;","O structură financiară corespunzătoare, dacă se consideră optim un nivel al ratei activelor imobilizate de 60%."],"correct":0,"resource":"bilant","source":"BIG","incomplete":false,"id":5},{"question":"Dinamica ratei activelor circulante indică:","options":["O creştere a riscurilor de nerecuperare a surselor de finanţare investite în activ;","O creştere a flexibilităţii activului;","Menţinerea ponderii activelor circulante în activul total;","Scăderea ponderii activelor circulante în activul total."],"correct":3,"resource":null,"source":"BIG","incomplete":false,"id":6},{"question":"Considerând optim un nivel al ratei activelor circulante de 40%, măsurile de corecţie ale acesteia pentru anul 3 vor viza:","options":["Asigurarea unui indice de creştere al activelor circulante inferior indicelui de creştere al activului total;","Asigurarea unui indice de creştere al activelor circulante superior indicelui de creştere al activului total;","Asigurarea unui indice de creştere al activelor circulante egal indicelui de creştere al activului total, în condiţiile în care structura patrimonială din anul 2 este corespunzătoare;","Sporirea mai rapidă a activelor circulante comparativ cu creşterea cifrei de afaceri."],"correct":1,"resource":"bilant","source":"BIG","incomplete":false,"id":7},{"question":"Rata lichidităţii curente aferente anului 1 reflectă:","options":["Capacitate bună de plată a datoriilor curente dar eficienţă scăzută în gestionarea surselor de finanţare;","Capacitate scăzută de plată a datoriilor curente dar eficienţă ridicată în gestionarea surselor de finanţare;","Capacitate ridicată de plată a datoriilor curente şi eficienţă ridicată în gestionarea surselor de finanţare;","O situaţie optimă prin prisma raportului capacitate de plată a datoriilor curente / eficienţă a gesitunii surselor de finanţare."],"correct":1,"resource":"bilant","source":"BIG","incomplete":false,"id":8},{"question":"Dinamica ratei lichidităţii rapide indică:","options":["O diminuare a eficienţei gestiunii surselor de finanţare dar şi o diminuare a riscului de incapacitate de plată a datoriilor curente;","O creştere a riscurilor de incapacitate de plată a datoriilor curente;","Menţinerea nivelului din anul 1 al capacităţii de achitare a datoriilor curente pe seama creanţelor şi a disponibilităţilor băneşti;","Creşterea autonomiei financiare a întreprinderii."],"correct":1,"resource":null,"source":"BIG","incomplete":false,"id":9},{"question":"Care dintre următoarele măsuri pentru anul 3 pot asigura optimizarea nivelului lichidităţii imediate:","options":["Aporturi în numerar la capitalul social;","Folosirea de disponibilităţi pentru realizarea de investiţii în active imobilizate;","Nu se impun măsuri de corecţie;","Niciun răspuns nu este corect."],"correct":0,"resource":null,"source":"BIG","incomplete":false,"id":10},{"question":"Rata solvabilităţii generale din anul 1 indică:","options":["O capacitate bună de acoperire a datoriilor prin lichidarea activelor;","O capacitate insuficientă de acoperire a datoriilor prin lichidarea activelor;","O stare de echilibru financiar global;","Niciun răspuns nu este corect."],"correct":0,"resource":"bilant","source":"BIG","incomplete":false,"id":11},{"question":"Dinamica ratei solvabilităţii generale are la bază:","options":["Un indice de creştere al activului superior indicelui de creştere al datoriilor totale;","Un indice de creştere al activului inferior indicelui de creştere al datoriilor totale;","Un indice de creştere al activului egal indicelui de creştere al datoriilor totale;","Un indice de creştere al activului imobilizat superior indicelui de creştere al datoriilor totale."],"correct":1,"resource":null,"source":"BIG","incomplete":false,"id":12},{"question":"Care dintre următoarele afirmaţii aferente anului 1 este adevărată:","options":["Se constată un surplus de surse de finanţare permanente peste nevoile de finanţare permanente;","Întreprinderea se află în echilibru financiar pe termen lung;","Nevoile de finanţare permanente sunt parţial finanţate din surse curente;","Activele imobilizate nu sunt finanţate integral din surse permanente dar există un fond de rulment pozitiv."],"correct":2,"resource":"bilant","source":"BIG","incomplete":false,"id":13},{"question":"Dinamica necesarului de fond de rulment reflectă:","options":["O creştere a disponibilităţilor neacoperite din datorii financiare pe termen scurt cu 47.045;","O scădere a disponibilităţilor neacoperite din datorii financiare pe termen scurt cu 47.045;","O creştere a nevoilor de finanţare ciclice neacoperite din surse de finanţare ciclice;","O scădere a nevoilor de finanţare ciclice superioară scăderii surselor de finanţare ciclice."],"correct":2,"resource":null,"source":"BIG","incomplete":false,"id":14},{"question":"Valoarea trezoreriei nete din anul 1 reflectă:","options":["O slabă capacitate de plată a datoriilor pe termen scurt;","O stare de dezechilibru financiar global;","O stare de echilibru financiar global;","Niciun răspuns nu este corect."],"correct":2,"resource":"bilant","source":"BIG","incomplete":false,"id":15},{"question":"Care dintre următoarele măsuri pot permite restabilirea echilibrului financiar global pentru anul 3:","options":["Reducerea fondului de rulment prin realizarea de investiţii în active imobilizate;","Creșterea fondului de rulment prin vânzarea de active imobilizate;","Reducerea necesarului de fond de rulment prin sporirea duratei creditelor comerciale acordate clienţilor;","Nu se impun măsuri, întreprinderea dispunând în anul 2 de echilibru financiar global."],"correct":1,"resource":null,"source":"BIG","incomplete":false,"id":16},{"question":"Analiza eficienţei gestiunii stocurilor la nivelul anului 1 reflectă:","options":["Întreprinderea încasează în medie contravaloarea stocurilor în 35 zile;","Stocurile se rotesc prin cifra de afaceri de 41 de ori;","Durata unei rotaţii a stocurilor prin cifra de afaceri este de 15 zile;","Stocurile se reconstituie prin cifra de afaceri în 35 zile."],"correct":3,"resource":null,"source":"BIG","incomplete":false,"id":17},{"question":"Analiza în dinamică a vitezei de rotaţie a creanţelor faţă de clienţi reflectă:","options":["O diminuare a numărului de rotaţii a creanţelor faţă de clienţi;","O scădere a duratei unei rotaţii a creanţelor faţă de clienţi;","Menţinerea constantă a eficienţei gestiunii creanţelor faţă de clienţi la nivelul celor 2 ani;","Niciun răspuns nu este corect."],"correct":0,"resource":null,"source":"BIG","incomplete":false,"id":18},{"question":"Dinamica duratei creditului furnizor are la bază:","options":["Un indice de creştere al datoriilor faţă de furnizori superior indicelui de creştere al cifrei de afaceri;","Un indice de creştere al datoriilor faţă de furnizori inferior indicelui de creştere al cifrei de afaceri;","Un indice de creştere al datoriilor faţă de furnizori egal cu indicele de creştere al cifrei de afaceri;","Niciun răspuns nu este corect."],"correct":1,"resource":null,"source":"BIG","incomplete":false,"id":19}];
+
+
+</script>
+<script>
+/* ===== Motor quiz — folosește `grile` și `resurse` definite mai sus ===== */
+(function(){
+  "use strict";
+
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#0ea5a4';
+
+  function shuffle(arr){
+    for (let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  let order = [];      // întrebările în ordine random pentru runda curentă
+  let idx = 0;
+  let score = 0;
+  let current = null;       // întrebarea curentă
+  let correctText = '';     // textul răspunsului corect
+  let selectedEl = null;
+
+  const $ = id => document.getElementById(id);
+
+  function startQuiz(){
+    order = shuffle(grile.slice());     // ordine random a întrebărilor, de fiecare dată
+    idx = 0;
+    score = 0;
+    selectedEl = null;
+    $('qcount').textContent = 'Total grile: ' + order.length;
+    renderQuestion();
+  }
+
+  function renderRef(res){
+    const box = $('refBox');
+    if(!res || !resurse[res]){ box.innerHTML = ''; return; }
+    const data = resurse[res];
+    box.innerHTML =
+      '<div class="refwrap">' +
+        '<button type="button" class="refToggle">Date pentru calcul: ' + data.titlu + ' — apasă pentru a afișa</button>' +
+        '<div class="refContent" style="display:none">' + data.html + '</div>' +
+      '</div>';
+    const btn = box.querySelector('.refToggle');
+    const content = box.querySelector('.refContent');
+    btn.addEventListener('click', function(){
+      const show = content.style.display === 'none';
+      content.style.display = show ? 'block' : 'none';
+      btn.textContent = (show ? 'Ascunde datele: ' : 'Date pentru calcul: ') + data.titlu + (show ? '' : ' — apasă pentru a afișa');
+    });
+  }
+
+  function renderQuestion(){
+    if(idx >= order.length){ finish(); return; }
+    current = order[idx];
+    correctText = current.options[current.correct];
+    const opts = shuffle(current.options.slice());   // ordinea răspunsurilor random de fiecare dată
+
+    selectedEl = null;
+    $('qnum').textContent = 'Întrebarea ' + (idx + 1) + ' / ' + order.length + '  (ID #' + current.id + ')';
+
+    renderRef(current.resource);
+
+    const q = $('question');
+    q.innerHTML = '';
+    if(current.incomplete){
+      const note = document.createElement('div');
+      note.className = 'incnote';
+      note.textContent = 'Grilă incompletă — în sursă a fost notat doar răspunsul corect.';
+      q.appendChild(note);
+    }
+    const qt = document.createElement('div');
+    qt.textContent = current.question;
+    q.appendChild(qt);
+
+    const optionsDiv = $('options');
+    optionsDiv.innerHTML = '';
+    opts.forEach(function(opt, i){
+      const el = document.createElement('div');
+      el.className = 'option';
+      const line = document.createElement('span');
+      line.className = 'optline';
+      const letter = document.createElement('span');
+      letter.className = 'optletter';
+      letter.textContent = String.fromCharCode(65 + i);
+      const text = document.createElement('span');
+      text.className = 'opttext';
+      text.textContent = opt;
+      line.appendChild(letter);
+      line.appendChild(text);
+      el.appendChild(line);
+      el.addEventListener('click', function(){ selectOption(el); });
+      optionsDiv.appendChild(el);
+    });
+
+    $('feedback').textContent = '';
+    $('submitBtn').disabled = false;
+    $('submitBtn').style.display = 'inline-block';
+    $('nextBtn').style.display = 'none';
+    $('nextBtn').textContent = (idx + 1 >= order.length) ? 'Vezi rezultatul →' : 'Următoarea →';
+    updateProgress(false);
+  }
+
+  function selectOption(el){
+    if(el.classList.contains('disabled')) return;
+    document.querySelectorAll('.option').forEach(function(o){ o.style.boxShadow = 'none'; });
+    selectedEl = el;
+    el.style.boxShadow = 'inset 0 0 0 2px ' + accent;
+  }
+
+  function submit(){
+    if(!selectedEl){ alert('Selectează un răspuns mai întâi.'); return; }
+    const chosen = selectedEl.querySelector('.opttext').textContent.trim();
+    document.querySelectorAll('.option').forEach(function(o){
+      o.classList.add('disabled');
+      o.style.boxShadow = 'none';
+    });
+    const correctTrim = correctText.trim();
+    if(chosen === correctTrim){
+      selectedEl.classList.add('correct');
+      $('feedback').textContent = 'Corect ✓';
+      $('feedback').style.color = 'var(--green)';
+      score += 1;
+    } else {
+      selectedEl.classList.add('wrong');
+      const correctEl = Array.from(document.querySelectorAll('.option'))
+        .find(function(o){ return o.querySelector('.opttext').textContent.trim() === correctTrim; });
+      if(correctEl) correctEl.classList.add('correct');
+      $('feedback').textContent = 'Greșit ✗';
+      $('feedback').style.color = 'var(--red)';
+    }
+    $('score').textContent = 'Scor: ' + score + ' / ' + (idx + 1);
+    $('submitBtn').disabled = true;
+    $('nextBtn').style.display = 'inline-block';
+    updateProgress(true);
+  }
+
+  function nextQuestion(){
+    idx += 1;
+    renderQuestion();
+  }
+
+  function updateProgress(answered){
+    const done = answered ? (idx + 1) : idx;
+    const ratio = done === 0 ? 0 : (idx + (answered ? 1 : 0)) / order.length;
+    $('visualBar').style.width = (ratio * 100) + '%';
+    if(done === 0){
+      $('progressText').textContent = 'Răspunde pentru a începe';
+    } else {
+      const acc = score / done * 100;
+      $('progressText').textContent = 'Rezolvate ' + done + ' / ' + order.length + ' — Acuratețe ' + acc.toFixed(0) + '%';
+    }
+  }
+
+  function finish(){
+    const pct = order.length ? (score / order.length * 100).toFixed(0) : 0;
+    $('visualBar').style.width = '100%';
+    $('progressText').textContent = 'Terminat!';
+    $('quizArea').innerHTML =
+      '<h2 style="margin-top:18px">Test terminat! </h2>' +
+      '<p style="font-size:18px">Scor final: <strong>' + score + ' / ' + order.length + '</strong> (' + pct + '%)</p>' +
+      '<button id="restartBtn">↺ Reia testul (altă ordine)</button>';
+    $('restartBtn').addEventListener('click', startQuiz);
+  }
+
+  $('submitBtn').addEventListener('click', submit);
+  $('nextBtn').addEventListener('click', nextQuestion);
+
+  startQuiz();
+})();
+</script>
+</body>
+</html>
