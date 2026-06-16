@@ -97,10 +97,22 @@ const grile = [{"question":"Variaţia absolută a cifrei de afaceri indică:","o
   let current = null;       // întrebarea curentă
   let correctText = '';     // textul răspunsului corect
   let selectedEl = null;
+  let quizAreaTemplate = null;   // structura originală a zonei de quiz (pt. reluare)
 
   const $ = id => document.getElementById(id);
 
+  function attachControls(){
+    $('submitBtn').addEventListener('click', submit);
+    $('nextBtn').addEventListener('click', nextQuestion);
+  }
+
   function startQuiz(){
+    if(quizAreaTemplate === null){
+      quizAreaTemplate = $('quizArea').innerHTML;   // salvează structura o singură dată
+    } else {
+      $('quizArea').innerHTML = quizAreaTemplate;    // reconstruiește zona după un test terminat
+    }
+    attachControls();
     order = shuffle(grile.slice());     // ordine random a întrebărilor, de fiecare dată
     idx = 0;
     score = 0;
@@ -239,9 +251,6 @@ const grile = [{"question":"Variaţia absolută a cifrei de afaceri indică:","o
       '<button id="restartBtn">↺ Reia testul (altă ordine)</button>';
     $('restartBtn').addEventListener('click', startQuiz);
   }
-
-  $('submitBtn').addEventListener('click', submit);
-  $('nextBtn').addEventListener('click', nextQuestion);
 
   startQuiz();
 })();
