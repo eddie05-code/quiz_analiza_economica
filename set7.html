@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="ro">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Examen 2026 · Grile Analiză</title>
+<style>
+  :root{--bg:#f3f4f6; --card:#ffffff; --accent:#0ea5a4; --green:#16a34a; --red:#dc2626;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;background:var(--bg);display:flex;align-items:flex-start;justify-content:center;min-height:100vh;padding:24px 12px;}
+  .card{width:min(900px,96vw);background:var(--card);border-radius:16px;box-shadow:0 8px 24px rgba(15,23,42,0.12);padding:24px;}
+  .head{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  h1{ margin:0 0 4px 0;font-size:20px; }
+  .question{font-size:18px;margin:16px 0;min-height:40px;line-height:1.45}
+  .options{display:flex;flex-direction:column;gap:8px}
+  .option{padding:10px 12px;border-radius:10px;border:1px solid #e6e6e6;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:10px;line-height:1.4}
+  .option .optline{display:flex;gap:10px;align-items:flex-start}
+  .optletter{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:#eef2f7;color:#111;font-weight:700;font-size:13px;display:inline-flex;align-items:center;justify-content:center;margin-top:1px}
+  .option.disabled{opacity:0.7;cursor:default}
+  .option.correct{background:rgba(22,163,74,0.12);border-color:rgba(22,163,74,0.4)}
+  .option.correct .optletter{background:var(--green);color:#fff}
+  .option.wrong{background:rgba(220,38,38,0.06);border-color:rgba(220,38,38,0.35)}
+  .option.wrong .optletter{background:var(--red);color:#fff}
+  .controls{display:flex;gap:12px;margin-top:18px;align-items:center;flex-wrap:wrap}
+  button{padding:10px 14px;border-radius:10px;border:none;background:var(--accent);color:white;cursor:pointer;font-weight:600;font-size:14px}
+  button:disabled{opacity:0.5;cursor:default}
+  button.secondary{background:#e6e6e6;color:#111}
+  .feedback{font-weight:700;font-size:14px}
+  .status{margin-left:auto;color:#374151;font-size:14px;font-weight:600}
+  .visual{height:6px;background:#e5e7eb;border-radius:999px;margin-top:12px;overflow:hidden}
+  .small{font-size:13px;color:#6b7280}
+  .incnote{font-size:12px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:6px 10px;margin:0 0 8px 0;display:inline-block}
+  /* reference data tables */
+  .refwrap{margin:10px 0 14px 0}
+  .refToggle{background:#111;color:#fff;font-size:13px;padding:8px 12px;border-radius:8px}
+  .refContent{margin-top:10px;overflow-x:auto}
+  table.ref{border-collapse:collapse;width:100%;font-size:12.5px;margin-bottom:14px;min-width:340px}
+  table.ref th,table.ref td{border:1px solid #e2e8f0;padding:4px 8px;text-align:left}
+  table.ref th{background:#f1f5f9;font-weight:700}
+  table.ref .ttl{background:#0ea5a4;color:#fff;text-align:center;font-size:13px}
+  table.ref .sec{background:#334155;color:#fff;font-weight:700;text-align:center}
+  table.ref .nr{text-align:center;color:#64748b;width:42px}
+  table.ref .sp{}
+  table.ref .v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  @media(max-width:520px){ .status{margin-left:0} }
+  .back-link{display:inline-block;margin-bottom:14px;text-decoration:none;color:#6b7280;font-weight:600;font-size:14px}
+  .back-link:hover{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="card">
+  <a href="index.html" class="back-link">← Înapoi la meniu</a>
+  <div class="head">
+    <h1>Examen 2026 — Grile Analiză Economico-Financiară</h1>
+    <div class="small" id="qcount"></div>
+    <div style="margin-left:auto" id="progressText" class="small">Răspunde pentru a începe</div>
+  </div>
+  <div class="visual"><div id="visualBar" style="height:100%;width:0;background:linear-gradient(90deg,var(--green),#10b981);border-radius:999px;transition:width .25s"></div></div>
+  <div id="quizArea">
+    <div id="qnum" class="small" style="margin-top:12px"></div>
+    <div id="refBox"></div>
+    <div id="question" class="question"></div>
+    <div id="options" class="options"></div>
+    <div class="controls">
+      <button id="submitBtn">Verifică</button>
+      <button id="nextBtn" class="secondary" style="display:none">Următoarea →</button>
+      <div id="feedback" class="feedback"></div>
+      <div class="status" id="score">Scor: 0</div>
+    </div>
+  </div>
+</div>
+<script>
+// ============================================================
+const resurse = {"bilant":{"titlu":"Bilanț financiar (anii 1 și 2)","html":"<table class=\"ref\"><tr><th colspan=\"4\" class=\"ttl\">Bilanț financiar - RON</th></tr><tr><th>Nr.crt.</th><th>Specificare\\ an</th><th>1</th><th>2</th></tr><tr><td colspan=\"4\" class=\"sec\">ACTIV</td></tr><tr><td class=\"nr\">1</td><td class=\"sp\">Imobilizări necorporale</td><td class=\"v\">180</td><td class=\"v\">456</td></tr><tr><td class=\"nr\">2</td><td class=\"sp\">Imobilizări corporale</td><td class=\"v\">17.640</td><td class=\"v\">22.344</td></tr><tr><td class=\"nr\">3</td><td class=\"sp\">Imobilizări financiare</td><td class=\"v\">180</td><td class=\"v\">0</td></tr><tr><td class=\"nr\">4</td><td class=\"sp\">ACTIVE IMOBILIZATE-TOTAL</td><td class=\"v\">18.000</td><td class=\"v\">22.800</td></tr><tr><td class=\"nr\">5</td><td class=\"sp\">Stocuri</td><td class=\"v\">2.000</td><td class=\"v\">2.850</td></tr><tr><td class=\"nr\">6</td><td class=\"sp\">Creanțe</td><td class=\"v\">5.000</td><td class=\"v\">5.700</td></tr><tr><td class=\"nr\">7</td><td class=\"sp\">Disponibilitati</td><td class=\"v\">2.778</td><td class=\"v\">1.650</td></tr><tr><td class=\"nr\">8</td><td class=\"sp\">ACTIVE CIRCULANTE-TOTAL</td><td class=\"v\">9.778</td><td class=\"v\">10.200</td></tr><tr><td class=\"nr\">9</td><td class=\"sp\">TOTAL ACTIV</td><td class=\"v\">27.778</td><td class=\"v\">33.000</td></tr><tr><td colspan=\"4\" class=\"sec\">PASIV</td></tr><tr><td class=\"nr\">1</td><td class=\"sp\">Capitaluri proprii</td><td class=\"v\">13.889</td><td class=\"v\">14.850</td></tr><tr><td class=\"nr\">2</td><td class=\"sp\">Datorii pe t. mediu și lung</td><td class=\"v\">2.778</td><td class=\"v\">3.300</td></tr><tr><td class=\"nr\">3</td><td class=\"sp\">…datorii financiare pe tml</td><td class=\"v\">2.500</td><td class=\"v\">3.300</td></tr><tr><td class=\"nr\">4</td><td class=\"sp\">... datorii de exploatare pe tml</td><td class=\"v\">278</td><td class=\"v\">0</td></tr><tr><td class=\"nr\">5</td><td class=\"sp\">CAPITAL PERMANENT</td><td class=\"v\">16.667</td><td class=\"v\">18.150</td></tr><tr><td class=\"nr\">6</td><td class=\"sp\">Datorii pe termen scurt</td><td class=\"v\">11.111</td><td class=\"v\">14.850</td></tr><tr><td class=\"nr\">7</td><td class=\"sp\">...datorii financiare pe termen scurt</td><td class=\"v\">556</td><td class=\"v\">3.713</td></tr><tr><td class=\"nr\">8</td><td class=\"sp\">...datorii de exploatare pe ts, din care:</td><td class=\"v\">10.556</td><td class=\"v\">11.138</td></tr><tr><td class=\"nr\">9</td><td class=\"sp\">..-furnizori și conturi asimilate</td><td class=\"v\">3.000</td><td class=\"v\">1.900</td></tr><tr><td class=\"nr\">10</td><td class=\"sp\">..-alte datorii de exploatare</td><td class=\"v\">7.556</td><td class=\"v\">9.238</td></tr><tr><td class=\"nr\">11</td><td class=\"sp\">DATORII-TOTAL</td><td class=\"v\">13.889</td><td class=\"v\">18.150</td></tr><tr><td class=\"nr\">12</td><td class=\"sp\">TOTAL PASIV</td><td class=\"v\">27.778</td><td class=\"v\">33.000</td></tr></table><table class=\"ref\"><tr><th colspan=\"4\" class=\"ttl\">Extras Cont de profit și pierdere - RON</th></tr><tr><th>Nr.crt.</th><th>Specificare\\ an</th><th>1</th><th>2</th></tr><tr><td class=\"nr\">1</td><td class=\"sp\">Cifra de afaceri</td><td class=\"v\">72.000</td><td class=\"v\">68.400</td></tr><tr><td class=\"nr\">2</td><td class=\"sp\">Rezultatul exploatării</td><td class=\"v\">7.000</td><td class=\"v\">6.000</td></tr><tr><td class=\"nr\">3</td><td class=\"sp\">Rezultat net</td><td class=\"v\">6.480</td><td class=\"v\">5.130</td></tr></table>"},"personal":{"titlu":"Date pentru analiza factorială (programat vs. realizat)","html":"<table class=\"ref\"><tr><th>Nr.crt.</th><th>Specificatie</th><th>Valori programate</th><th>Valori realizate</th><th>u.m.</th></tr><tr><td class=\"nr\">1</td><td class=\"sp\">Numar de personal</td><td class=\"v\">30</td><td class=\"v\">25</td><td>pers.</td></tr><tr><td class=\"nr\">2</td><td class=\"sp\">Mijloace fixe</td><td class=\"v\">10.000</td><td class=\"v\">8.000</td><td>RON</td></tr><tr><td class=\"nr\">3</td><td class=\"sp\">Cifra de afaceri</td><td class=\"v\">24.000</td><td class=\"v\">18.000</td><td>RON</td></tr></table>"}};
+const grile = [
+{"question":"Principalii indicatori de solvabilitate trebuie să asigure:","options":["un grad de acoperire al serviciului datoriei subunitar","acoperirea datoriilor pe termen mediu și lung din activele curente, astfel încât valoarea ratei să fie permanent supraunitară","acoperirea datoriilor totale din activele totale","depășirea nivelului activul total de către datoriile totale"],"correct":2,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":1},
+{"question":"Care din acțiunile enumerate mai jos determină scăderea fondului de rulment propriu:","options":["capitalizarea profiturilor nete la nivelul capitalului propriu","repartizarea profiturilor nete pentru dividende","subscrieri noi de capital din partea acționarilor sau asociaților","vânzarea de active imobilizate"],"correct":1,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":2},
+{"question":"Scăderea capitalului propriu se poate realiza prin:","options":["capitalizarea profiturilor nete la nivelul întreprinderii","aportul acţionarilor în numerar şi / sau în natură","atragerea de subvenţii pentru investiţii","repartizările spre dividende din profitul net"],"correct":3,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":3},
+{"question":"Rata rentabilității economice trebuie să îndeplinească următoarele condiții:","options":["rata de rentabilitate trebuie să fie inferioară ratei medii a dobânzii la capitalurile împrumutate pentru a asigura fructificarea efectului de levier al îndatorării","nivelul ratei trebuie să asigure menținerea substanței economice a mijloacelor patrimoniale ale întreprinderii, păstrarea valorii lor, condiție îndeplinită dacă este mai mică decât rata inflației","nivelul ratei trebuie să depășească nivelul ratei minime de randament din economie și să acopere riscul asumat de furnizorii de capital (acționari și creditori)","nivelul ratei de rentabilitate trebuie să asigure remunerea și creșterea activelor într-un termen cât mai lung"],"correct":2,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":4},
+{"question":"Dinamica ratei lichidității curente are la bază:","options":["Creșterea activelor circulante pe seama unei creșteri a volumului de activitate","Creșterea activelor circulante datorată exclusiv unei creșteri a eficienței gestiunii acestora","Creșterea datoriilor curente datorată exclusiv unei reduceri a volumului de activitate","Nici un răspuns"],"correct":2,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":5},
+{"question":"Solvabilitatea întreprinderii presupune:","options":["capacitatea întreprinderii de a-şi onora obligaţiile bancare scadente pe termen scurt","capacitatea întreprinderii de a-şi achita obligaţiile totale (indiferent de termen)","capacitatea întreprinderii de a plăti furnizorii de materiale","capacitatea întreprinderii de a-şi onora obligaţiile faţă de stat"],"correct":1,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":6},
+{"question":"Existența unei trezorerii nete negative arată că:","options":["posibilitatea efectuării de investiții financiare pe termen scurt și a deținerii de disponibilități bănești","valoarea cumulată a disponibilităților bănești din conturi bancare și casă și a investițiilor financiare pe termen scurt depășește nivelul creditelor pe termen scurt","necesitatea contractării de credite de trezorerie","fondul de rulment se constituie într-o sursă de finanțare, iar necesarul de fond de rulment se constituie într-o sursă de finanțare"],"correct":2,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":7},
+{"question":"Conform modelului factorial VA = Aex x CA/Aex x VA / CA, care pune în evidență contribuția resurselor tehnice și materiale (Aex – activele de exploatare) la formarea valorii adăugate (VA), mecanismul prin care activele din exploatare își transmit influența asupra valorii adăugate este:","options":["În mod direct, în același sens și direct proporțional cu nivelul eficienței utilizării activelor de exploatare prin prisma capacității acestora de a degaja cifră de afaceri din perioada curentă și cu nivelul din perioada de bază a ratei valorii adăugate","În mod direct, în același sens și proporțional cu nivelul eficienței utilizării activelor de exploatare prin prisma capacității acestora de a degaja cifră de afaceri din perioada de bază și cu nivelul din perioada de bază al ratei valorii adăugate","În mod direct, în același sens și proporțional cu nivelul eficienței utilizării activelor de exploatare prin prisma capacității acestora de a degaja cifră de afaceri din perioada de bază și cu nivelul din perioada curentă al ratei valorii adăugate","În mod direct, în același sens și proporțional cu nivelul eficienței utilizării activelor de exploatare prin prisma capacității acestora de a degaja cifră de afaceri din perioada curentă al ratei valorii adăugate"],"correct":1,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":8},
+{"question":"Principalii indicatorii de bonitate financiară trebuie să asigure:","options":["depăşirea nivelului activul total de către datoriile financiare totale","acoperirea datoriilor pe termen scurt din activele curente, astfel încât valoarea ratei să fie permanent subunitară","acoperirea serviciului datoriei din autofinanţarea netă a exerciţiului, astfel încât nivelul indicatorului să fie permanent peste 100%","acoperirea datoriilor pe termen mediu şi lung din activele curente mai puţin stocuri, astfel încât valoarea ratei să fie permanent subunitară"],"correct":2,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":9},
+{"question":"O durată în zile a creanţelor clienţi mică înseamnă:","options":["obţinerea unor efecte favorabile asupra dimensionării necesarului de fond de rulment","clienţii utilizează o perioadă de timp mare resursele financiare ale întreprinderii","o poziţie dominantă a clienţilor în raport cu întreprinderea","practicarea pe piaţă a unei rate a dobânzii scăzute"],"correct":0,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":10},
+{"question":"Care dintre următoarele rate de structură ale pasivului este complementară ratei stabilităţii financiare:","options":["rata autonomiei financiare globale","rata autonomiei financiare la termen","rata îndatorării globale","rata surselor curente"],"correct":3,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":11},
+{"question":"Ratele de structură financiară reflectă:","options":["destinaţia economică a capitalului investit","gradul de lichiditate al capitalului investit","aprecierea modului de formare a surselor de finanţare după termene de exigibilitate (scurt, mediu şi lung) respectiv surse de provenienţă (proprii, împrumutate şi atrase)","capacitatea întreprinderii de a-şi modifica structura activului sub influenţa factorilor de mediu"],"correct":2,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":12},
+{"question":"Creșterea în dinamică a ratei surselor curente înseamnă:","options":["scăderea ponderii creditelor pe termen scurt în total pasiv","scăderea surselor pe termen scurt în raport cu sursele permanente","finanțarea într-o mai mare măsură, de la o perioadă la alta, a activelor pe seama surselor permanente","finanțarea într-o mai mare măsură, de la o perioadă la alta, a activelor pe seama datoriilor financiare pe termen scurt"],"correct":3,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":13},
+{"question":"Logica analizei lichidităţii întreprinderii constă în:","options":["testarea din ce în ce mai drastică a capacităţii de plată a datoriilor pe termen mediu şi lung din elemente de active circulante cu grade de lichiditate din ce în ce mai mari","testarea din ce în ce mai drastică a capacităţii de plată a datoriilor pe termen scurt din elemente de active circulante cu grade de lichiditate din ce în ce mai mici","testarea din ce în ce mai drastică a capacităţii de plată a datoriilor pe termen scurt din elemente de active circulante cu grade de lichiditate din ce în ce mai mari","testarea din ce în ce mai drastică a capacităţii de plată a datoriilor pe termen mediu şi lung din elemente de active circulante cu grade de lichiditate din ce în ce mai mici"],"correct":2,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":14},
+{"question":"Dacă disponibilităţile băneşti se află pentru o durată mai mare de timp la un nivel superior necesarului curent înseamnă:","options":["nevoia de a apela la credite de trezorerie, purtătoare de costuri","nefructificarea şi neconservarea lichidităţilor având în vedere efectele inflaţiei","existenţa unei politici de plasament financiar care să asigure, pe de o parte, menţinerea valorii banilor, iar pe de altă parte, realizarea unor venituri suplimentare din dividende sau dobânzi şi/sau din vânzarea titlurilor de plasament la preţuri mai mari decât cele de achiziţie","imposibilitatea onorării la termen a obligaţiilor"],"correct":2,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":15},
+{"question":"Evoluția necesarului de fond de rulment este influențată de acțiunea mai multor factori între care:","options":["primirea de subvenții pentru investiții","modul de gestionare al imobilizărilor în curs","acumularea rezervelor","modificarea duratei medii de încasare a clienților și de achitare a furnizorilor"],"correct":3,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":16},
+{"question":"Care din următoarele rate de structură ale pasivului este complementară ratei îndatorării globale:","options":["rata îndatorării la termen","rata stabilității financiare","rata autonomiei financiare globale","rata autonomiei financiare la termen"],"correct":2,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":17},
+{"question":"Pentru modelul factorial bazat pe rate explicative VA = Np x nz x h x VAh, care pune în evidență contribuția resursei umane (Np – număr personal) la generarea valorii adăugate (VA), factorii de influență ai valorii adăugate, în ordinea condiționării economice, sunt:","options":["numărul mediu de personal, numărul de zile lucrate în medie de un salariat pe an, numărul de ore lucrate în medie de un salariat pe zi, valoarea adăugată medie orară","numărul total de zile lucrate de toți salariații într-un an și valoarea adăugată medie orară","numărul mediu de ore lucrate de un salariat într-un an și productivitatea medie orară a muncii cu baza de calcul în valoarea adăugată","numărul mediu de personal, numărul de zile lucrate de toți salariații într-un an, numărul de ore lucrate în medie de un salariat pe zi, productivitatea medie orară a muncii cu baza de calcul în valoarea adăugată"],"correct":0,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":18},
+{"question":"Conform modelului factorial CA = Np x Int/Np x CA/Int, care pune în evidență contribuția resurselor umane (Np – număr de personal) și a resurselor tehnice (Int – imobilizări fixe) la formarea cifrei de afaceri (CA), mecanismul prin care gradul de înzestrare tehnică a muncii (Int/Np) își transmite influența asupra cifrei de afaceri este:","options":["În mod direct, în același sens și proporțional cu nivelul numărului de personal din perioada curentă și cu nivelul din perioada de bază al eficienței utilizării imobilizărilor fixe prin prisma capacității acestora de a genera cifra de afaceri","În mod direct, în același sens și proporțional cu nivelul numărului de personal din perioada de bază și cu nivelul din perioada curentă al eficienței utilizării imobilizărilor fixe prin prisma capacității acestora de a genera cifra de afaceri","În mod direct, în același sens și proporțional cu numărul de ore lucrate în medie de un salariat pe an din perioada curentă și cu nivelul eficienței utilizării imobilizărilor fixe prin prisma capacității acestora de a genera cifra de afaceri din perioada de bază","În mod direct, în același sens și invers proporțional cu nivelul numărului de personal din perioada curentă și cu nivelul din perioada de bază al eficienței utilizării imobilizărilor fixe prin prisma capacității acestora de a genera cifra de afaceri"],"correct":0,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":19},
+{"question":"Ratele de structură ale patrimoniului reflectă:","options":["gradul de îndatorare al întreprinderii","capacitatea întreprinderii de a-şi modifica structura pasivului sub influenţa factorilor de mediu","destinaţia economică a capitalului investit","gradul de siguranţă în finanţare"],"correct":2,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":20},
+{"question":"Printre cauzele dinamicii numărului de rotații al stocurilor se poate număra:","options":["creșterea duratei de stocare a materiilor prime pe seama sporirii costurilor cu transportul","reducerea duratei procesului de producție pe seama creșterii productivității muncii","numărul de rotații al stocurilor nu se modifică","diminuarea duratei procesului de producție prin achiziția de utilaje moderne"],"correct":3,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":21},
+{"question":"O durată în zile a creanţelor clienţi mare înseamnă:","options":["o poziţie dominantă a clienţilor în raport cu întreprinderea","practicarea pe piaţă a unei rate a dobânzii ridicate","obţinerea unor efecte favorabile asupra dimensionării necesarului de fond de rulment","clienţii utilizează o perioadă de timp mică resursele financiare ale întreprinderii"],"correct":0,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":22},
+{"question":"Care dintre următoarele măsuri pot asigura optimizarea structurii financiare pe termene:","options":["creşterea capitalului social","creşterea activelor imobilizate","înlocuirea parţială a datoriilor pe termen mediu şi lung cu datorii pe termen scurt","nu se impun măsuri de corecţie"],"correct":0,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":23},
+{"question":"Creşterea vitezei de rotaţie a elementelor patrimoniale înseamnă:","options":["obţinerea unui nivel mai ridicat al cifrei de afaceri la un volum total dat de resurse","obţinerea unei cifre de afaceri mai mici cu un volum total de resurse mai mare","creşterea necesarului de resurse pentru realizarea unui anumit nivel al cifrei de afaceri","imobilizarea de resurse materiale şi financiare care ar putea fi alocate pentru creşterea volumului de activitate, pentru dezvoltare, pentru investiţii financiare"],"correct":0,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":24},
+{"question":"Între căile posibile de creştere a ratei rentabilităţii financiare identificăm:","options":["creşterea gradului de îndatorare, dacă şi numai dacă rentabilitatea economică este mai mare decât costul mediu al capitalului împrumutat, adică dacă se manifestă efectul de levier financiar","scăderea nivelului profitabilităţii comerciale nete","încetinirea vitezei de rotaţie a activului economic","creşterea presiunii fiscale"],"correct":0,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":25},
+{"question":"Rata autonomiei financiare la termen se determină ca:","options":["raport între sursele proprii de finanţare şi sursele împrumutate pe perioade mai mari de un an","pondere a capitalurilor proprii în totalul surselor de finanţare","pondere a capitalurilor proprii în totalul datoriilor financiare","raport între sursele împrumutate de finanţare pe o perioadă mai mare de un an şi sursele permanente"],"correct":0,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":26},
+{"question":"Dinamica ratei solvabilității globale reflectă:","options":["o diminuare a capacității de plată a datoriilor totale pe seama lichidării activelor","o creștere a capacității de plată a datoriilor totale pe seama lichidării activelor","creșterea eficienței utilizării datoriilor totale","menținerea constantă a capacității de plată a datoriilor totale pe seama lichidării activelor"],"correct":0,"resource":"bilant","source":"EXAMEN 2026","incomplete":false,"id":27},
+{"question":"Rata autonomiei financiare globale se determină ca:","options":["raport între sursele proprii de finanţare şi cele împrumutate pe perioade mai mari de un an","pondere a capitalurilor proprii în totalul datoriilor financiare","raport între sursele împrumutate de finanţare pe o perioadă mai mare de un an şi sursele permanente","pondere a capitalurilor proprii în totalul surselor de finanţare"],"correct":3,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":28},
+{"question":"În ceea ce privește Rata stabilității financiare, măsurile de corecție pentru anul următor vor viza:","options":["asigurarea unui indice de creştere al capitalului permanent inferior indicelui de creştere al cifrei de afaceri","nu se impun măsuri de corecţie","asigurarea unui indice de creştere al capitalului permanent superior indicelui de creştere al pasivului total","asigurarea unui indice de creştere al capitalului permanent inferior indicelui de creştere al pasivului total"],"correct":2,"resource":"bilant","source":"EXAMEN 2026","incomplete":false,"id":29},
+{"question":"Necesarul de fond de rulment din anul 2 reflectă:","options":["o stare de dezechilibru caracterizată de un surplus de surse de finanțare ciclice peste nevoile ciclice de finanțare de 2.588","o stare de dezechilibru caracterizată de un surplus de nevoi de finanțare ciclice peste sursele ciclice de finanțare de 2.588","o stare de echilibru financiar curent","o stare de echilibru caracterizată de un surplus de surse de finanțare ciclice peste nevoile ciclice de finanțare de 2.588"],"correct":0,"resource":"bilant","source":"EXAMEN 2026","incomplete":false,"id":30},
+{"question":"Care dintre următoarele alternative caracterizează impactul modificării gradului de înzestrare tehnică a muncii asupra cifrei de afaceri (valori numerice):","options":["creșterea gradului de înzestrare tehnică a muncii cu 13,3 determină creșterea cifrei de afaceri cu 563 RON","diminuarea gradului de înzestrare tehnică a muncii cu 13,3 determină diminuarea cifrei de afaceri cu 798 RON","creșterea gradului de înzestrare tehnică a muncii cu 12,3 determină diminuarea cifrei de afaceri cu 867 RON","diminuarea gradului de înzestrare tehnică a muncii cu 12,3 determină creșterea cifrei de afaceri cu 472 RON"],"correct":1,"resource":"personal","source":"EXAMEN 2026","incomplete":false,"id":31},
+{"question":"Pornind de la relaţiile de cauzalitate între factori şi indicator, care dintre situaţiile enumerate mai jos poate fi considerată cea mai bună din punct de vedere al asigurării creşterii ratei de rentabilitate financiară (Rrf), conform modelului factorial Rrf = CA/Ae x Rn/CA x Ae/Cpr x 100:","options":["încetinirea vitezei de rotaţie a activului economic, creşterea profitabilităţii comerciale nete şi creşterea gradului de îndatorare cu condiţia ca rentabilitatea economică să fie mai mică decât costul mediu al capitalului împrumutat","accelerarea vitezei de rotaţie a activului economic şi reducerea profitabilităţii comerciale nete","încetinirea vitezei de rotaţie a activului economic, scăderea profitabilităţii comerciale nete şi scăderea gradului de îndatorare cu condiţia ca rentabilitatea economică să fie mai mică decât costul mediu al capitalului împrumutat","creşterea numărului de rotaţii al activului economic, creşterea profitabilităţii comerciale nete şi creşterea gradului de îndatorare cu condiţia ca rentabilitatea economică să fie mai mare decât costul mediu al capitalului împrumutat, adică dacă se manifestă efectul de levier financiar"],"correct":3,"resource":null,"source":"EXAMEN 2026","incomplete":false,"id":32}
+];
+
+
+</script>
+<script>
+/* ===== Motor quiz — folosește `grile` și `resurse` definite mai sus ===== */
+(function(){
+  "use strict";
+
+  const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#0ea5a4';
+
+  function shuffle(arr){
+    for (let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  let order = [];      // întrebările în ordine random pentru runda curentă
+  let idx = 0;
+  let score = 0;
+  let current = null;       // întrebarea curentă
+  let correctText = '';     // textul răspunsului corect
+  let selectedEl = null;
+  let quizAreaTemplate = null;   // structura originală a zonei de quiz (pt. reluare)
+
+  const $ = id => document.getElementById(id);
+
+  function attachControls(){
+    $('submitBtn').addEventListener('click', submit);
+    $('nextBtn').addEventListener('click', nextQuestion);
+  }
+
+  function startQuiz(){
+    if(quizAreaTemplate === null){
+      quizAreaTemplate = $('quizArea').innerHTML;   // salvează structura o singură dată
+    } else {
+      $('quizArea').innerHTML = quizAreaTemplate;    // reconstruiește zona după un test terminat
+    }
+    attachControls();
+    order = shuffle(grile.slice());     // ordine random a întrebărilor, de fiecare dată
+    idx = 0;
+    score = 0;
+    selectedEl = null;
+    $('qcount').textContent = 'Total grile: ' + order.length;
+    renderQuestion();
+  }
+
+  function renderRef(res){
+    const box = $('refBox');
+    if(!res || !resurse[res]){ box.innerHTML = ''; return; }
+    const data = resurse[res];
+    box.innerHTML =
+      '<div class="refwrap">' +
+        '<button type="button" class="refToggle">Date pentru calcul: ' + data.titlu + ' — apasă pentru a afișa</button>' +
+        '<div class="refContent" style="display:none">' + data.html + '</div>' +
+      '</div>';
+    const btn = box.querySelector('.refToggle');
+    const content = box.querySelector('.refContent');
+    btn.addEventListener('click', function(){
+      const show = content.style.display === 'none';
+      content.style.display = show ? 'block' : 'none';
+      btn.textContent = (show ? 'Ascunde datele: ' : 'Date pentru calcul: ') + data.titlu + (show ? '' : ' — apasă pentru a afișa');
+    });
+  }
+
+  function renderQuestion(){
+    if(idx >= order.length){ finish(); return; }
+    current = order[idx];
+    correctText = current.options[current.correct];
+    const opts = shuffle(current.options.slice());   // ordinea răspunsurilor random de fiecare dată
+
+    selectedEl = null;
+    $('qnum').textContent = 'Întrebarea ' + (idx + 1) + ' / ' + order.length + '  (ID #' + current.id + ')';
+
+    renderRef(current.resource);
+
+    const q = $('question');
+    q.innerHTML = '';
+    if(current.incomplete){
+      const note = document.createElement('div');
+      note.className = 'incnote';
+      note.textContent = 'Grilă incompletă — în sursă a fost notat doar răspunsul corect.';
+      q.appendChild(note);
+    }
+    const qt = document.createElement('div');
+    qt.textContent = current.question;
+    q.appendChild(qt);
+
+    const optionsDiv = $('options');
+    optionsDiv.innerHTML = '';
+    opts.forEach(function(opt, i){
+      const el = document.createElement('div');
+      el.className = 'option';
+      const line = document.createElement('span');
+      line.className = 'optline';
+      const letter = document.createElement('span');
+      letter.className = 'optletter';
+      letter.textContent = String.fromCharCode(65 + i);
+      const text = document.createElement('span');
+      text.className = 'opttext';
+      text.textContent = opt;
+      line.appendChild(letter);
+      line.appendChild(text);
+      el.appendChild(line);
+      el.addEventListener('click', function(){ selectOption(el); });
+      optionsDiv.appendChild(el);
+    });
+
+    $('feedback').textContent = '';
+    $('submitBtn').disabled = false;
+    $('submitBtn').style.display = 'inline-block';
+    $('nextBtn').style.display = 'none';
+    $('nextBtn').textContent = (idx + 1 >= order.length) ? 'Vezi rezultatul →' : 'Următoarea →';
+    updateProgress(false);
+  }
+
+  function selectOption(el){
+    if(el.classList.contains('disabled')) return;
+    document.querySelectorAll('.option').forEach(function(o){ o.style.boxShadow = 'none'; });
+    selectedEl = el;
+    el.style.boxShadow = 'inset 0 0 0 2px ' + accent;
+  }
+
+  function submit(){
+    if(!selectedEl){ alert('Selectează un răspuns mai întâi.'); return; }
+    const chosen = selectedEl.querySelector('.opttext').textContent.trim();
+    document.querySelectorAll('.option').forEach(function(o){
+      o.classList.add('disabled');
+      o.style.boxShadow = 'none';
+    });
+    const correctTrim = correctText.trim();
+    if(chosen === correctTrim){
+      selectedEl.classList.add('correct');
+      $('feedback').textContent = 'Corect ✓';
+      $('feedback').style.color = 'var(--green)';
+      score += 1;
+    } else {
+      selectedEl.classList.add('wrong');
+      const correctEl = Array.from(document.querySelectorAll('.option'))
+        .find(function(o){ return o.querySelector('.opttext').textContent.trim() === correctTrim; });
+      if(correctEl) correctEl.classList.add('correct');
+      $('feedback').textContent = 'Greșit ✗';
+      $('feedback').style.color = 'var(--red)';
+    }
+    $('score').textContent = 'Scor: ' + score + ' / ' + (idx + 1);
+    $('submitBtn').disabled = true;
+    $('nextBtn').style.display = 'inline-block';
+    updateProgress(true);
+  }
+
+  function nextQuestion(){
+    idx += 1;
+    renderQuestion();
+  }
+
+  function updateProgress(answered){
+    const done = answered ? (idx + 1) : idx;
+    const ratio = done === 0 ? 0 : (idx + (answered ? 1 : 0)) / order.length;
+    $('visualBar').style.width = (ratio * 100) + '%';
+    if(done === 0){
+      $('progressText').textContent = 'Răspunde pentru a începe';
+    } else {
+      const acc = score / done * 100;
+      $('progressText').textContent = 'Rezolvate ' + done + ' / ' + order.length + ' — Acuratețe ' + acc.toFixed(0) + '%';
+    }
+  }
+
+  function finish(){
+    const pct = order.length ? (score / order.length * 100).toFixed(0) : 0;
+    $('visualBar').style.width = '100%';
+    $('progressText').textContent = 'Terminat!';
+    $('quizArea').innerHTML =
+      '<h2 style="margin-top:18px">Test terminat! </h2>' +
+      '<p style="font-size:18px">Scor final: <strong>' + score + ' / ' + order.length + '</strong> (' + pct + '%)</p>' +
+      '<button id="restartBtn">↺ Reia testul (altă ordine)</button>';
+    $('restartBtn').addEventListener('click', startQuiz);
+  }
+
+  startQuiz();
+})();
+</script>
+</body>
+</html>
